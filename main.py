@@ -114,12 +114,14 @@ def signup():
         username = request.form['username']
         password = request.form['password']
         verify = request.form['verify']
+        existing_user = User.query.filter_by(username=username).first()
 
         username_error = ""                                         # here you're creating an empty string for the username error to make it a variable
         password_error = ""
         verify_error = ""
+    
 
-        existing_user = User.query.filter_by(username=username).first()
+        
         if not existing_user:
     #THIS IS FOR THE USERNAME ERROR
             if not 20 >= len(username) >= 3 or " " in username:         # if the username is greater than 20 characters or less than three, or there is a space                
@@ -132,6 +134,8 @@ def signup():
         #THIS IS FOR VERIFYING THE PASSWORD
             if verify != password:                                  
                 verify_error = "Password does not match."
+        #THIS IS IF USERNAME ALREADY EXISTS
+
 
             if not username_error and not password_error and not verify_error:
                 existing_user = User.query.filter_by(username=username).first()
@@ -144,6 +148,10 @@ def signup():
             else:
 
                 return render_template('signup.html', username=username, username_error=username_error, password_error=password_error, verify_error=verify_error)   #otherwise, give the user the form with the username in tact
+        else:
+            username_error = "Username already taken."
+            return render_template('signup.html',username_error=username_error)
+
     return render_template('signup.html')
 
 

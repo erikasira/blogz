@@ -43,11 +43,31 @@ def home():
 @app.route('/blog', methods=['GET', 'POST'])                        #This is setting up the main page for the web application
 def index():
 
-    post_id = str(request.args.get('id'))  
-    mypost =  BlogPost.query.get(post_id)                                                 #This is setting a function so that the page works?
-    posts = BlogPost.query.all()                              #I think this line pulls the info from the SQL table?
+    blog_id = request.args.get('id')
+    user_id = request.args.get('userid')
+    posts = BlogPost.query.all()
+    # Recent blog posts order to top.
 
-    return render_template('index.html', posts=posts, mypost=mypost)       #This will render the html template set for the index
+
+    if blog_id:
+        post = BlogPost.query.filter_by(id=blog_id).first()
+        return render_template("post.html", title=post.title, post=post.post, user=post.owner.username, user_id=post.owner_id)
+    if user_id:
+        entries = BlogPost.query.filter_by(owner_id=user_id).all()
+        return render_template('singleuser.html', entries=entries)
+
+    return render_template('index.html', posts=posts)
+
+    # post_id = str(request.args.get('id'))  
+    # mypost =  BlogPost.query.get(post_id)                                                 #This is setting a function so that the page works?
+    # posts = BlogPost.query.all()                              #I think this line pulls the info from the SQL table?
+
+    # if mypost:
+    #     entries = BlogPost.query.filter_by(owner_id=mypost).all()
+    #     return render_template('post.html', entries=entries)
+
+
+    # return render_template('index.html', posts=posts, mypost=mypost)       #This will render the html template set for the index
 
 
 @app.route('/newpost', methods=['POST','GET'])                #This is another page, which is where the user will input their blog
@@ -64,15 +84,25 @@ def require_login():
 
 @app.route('/login', methods=['POST','GET'])
 def login():
+    username_error = ""
+    password_error = ""
+
     if request.method == 'POST':
         username = request.form['username']
         password = request.form['password']
         user = User.query.filter_by(username=username).first()
+        users_password = User.query.filter_by(password=password).first()
+        
+        
         if user and user.password == password:
             session['username'] = username
             flash("Logged in")
             print(session)
             return redirect('/newpost')
+        if not user:
+            return render_template('login.html', username_error="Username does not exist.")
+        if not users_password:
+            return render_template('login.html', password_error="Incorrect password.")
         else:
             flash('User password incorrect or user does not exist', 'error')
 
